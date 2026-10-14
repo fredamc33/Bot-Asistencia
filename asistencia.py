@@ -65,19 +65,20 @@ def registrar_asistencia():
         btn_login = driver.find_element(By.XPATH, "//button[contains(text(), 'Ingresar')]")
         btn_login.click()
         
-        # Pausa para asegurar que la página interna cargue por completo en la nube
         time.sleep(5)
         print(f"URL actual tras login: {driver.current_url}")
         
         print(f"4. Buscando el botón '{texto_boton}'...")
-        # normalize-space() evita errores por espacios invisibles en el texto del botón
         btn_turno = WebDriverWait(driver, 30).until(
             EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
         )
-        btn_turno.click()
         
-        time.sleep(5)
-        print(f"¡Acción '{texto_boton}' registrada con éxito!")
+        # FORZAR EL CLIC CON JAVASCRIPT (Soluciona el problema de que la web no registre la acción)
+        driver.execute_script("arguments[0].click();", btn_turno)
+        
+        # Pausa más larga para dar tiempo a que el servidor procese el guardado de asistencia
+        time.sleep(8)
+        print(f"¡Acción '{texto_boton}' ejecutada por JavaScript con éxito!")
 
     except Exception as e:
         print(f"Ocurrió un error durante la ejecución: {e}")
