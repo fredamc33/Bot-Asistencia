@@ -4,35 +4,16 @@ import random
 from datetime import datetime
 
 def es_feriado(fecha):
-    # Lista de feriados oficiales en Perú (Formato Mes-Día: MM-DD)
     feriados_2026 = [
-        "01-01", # Año Nuevo
-        "04-02", # Jueves Santo
-        "04-03", # Viernes Santo
-        "05-01", # Día del Trabajo
-        "06-07", # Batalla de Arica y Día de la Bandera
-        "06-29", # San Pedro y San Pablo
-        "07-23", # Día de la Fuerza Aérea del Perú
-        "07-28", # Fiestas Patrias
-        "07-29", # Fiestas Patrias
-        "08-06", # Batalla de Junín
-        "08-30", # Santa Rosa de Lima
-        "10-08", # Combate de Angamos
-        "11-01", # Día de Todos los Santos
-        "12-08", # Inmaculada Concepción
-        "12-09", # Batalla de Ayacucho
-        "12-25"  # Navidad
+        "01-01", "04-02", "04-03", "05-01", "06-07", "06-29", 
+        "07-23", "07-28", "07-29", "08-06", "08-30", "10-08", 
+        "11-01", "12-08", "12-09", "12-25"
     ]
-    
-    # Verificar si es fin de semana (Sábado = 5, Domingo = 6)
     if fecha.weekday() >= 5:
         return True
-        
-    # Verificar si coincide con algún feriado
     mes_dia = fecha.strftime("%m-%d")
     if mes_dia in feriados_2026:
         return True
-        
     return False
 
 def registrar_asistencia():
@@ -43,11 +24,18 @@ def registrar_asistencia():
         print("Hoy es fin de semana o feriado oficial. No se registrará asistencia.")
         return
 
-    # Esperar un tiempo aleatorio entre 0 y 10 minutos (0 a 600 segundos)
-    # para caer dentro del intervalo de 08:55 a 09:05 si se ejecuta a las 08:55 a.m.
-    retraso_aleatorio = random.randint(0, 600)
-    print(f"Esperando {retraso_aleatorio} segundos antes de proceder...")
-    time.sleep(retraso_aleatorio)
+    # Determinar si es turno de mañana o tarde según la hora actual
+    hora_actual = hoy.hour
+    if hora_actual < 14:
+        # Turno mañana: Aplicar retraso aleatorio (0 a 10 minutos) si se ejecuta a las 8:55 a.m.
+        retraso_aleatorio = random.randint(0, 600)
+        print(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
+        time.sleep(retraso_aleatorio)
+        texto_boton = "INICIAR TURNO"
+    else:
+        # Turno tarde: Ejecución a las 6:30 p.m.
+        print("Turno Tarde: Procediendo al registro de salida...")
+        texto_boton = "FINALIZAR TURNO"
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
@@ -81,14 +69,14 @@ def registrar_asistencia():
         btn_login = driver.find_element(By.XPATH, "//button[contains(text(), 'Ingresar')]")
         btn_login.click()
         
-        # 5. Esperar a que cargue el panel interno y hacer clic en "INICIAR TURNO"
+        # 5. Esperar el botón correspondiente (INICIAR TURNO o FINALIZAR TURNO)[cite: 4]
         btn_turno = WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'INICIAR TURNO')]"))
+            EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{texto_boton}')]"))
         )
         btn_turno.click()
         
         time.sleep(5)
-        print("¡Turno y asistencia registrados con éxito!")
+        print(f"¡Acción '{texto_boton}' registrada con éxito!")
 
     except Exception as e:
         print(f"Ocurrió un error durante la ejecución: {e}")
