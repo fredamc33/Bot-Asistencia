@@ -1,0 +1,31 @@
+name: Automatizar Asistencia
+
+on:
+  schedule:
+    # 8:55 AM (13:55 UTC) y 6:30 PM (23:30 UTC) de lunes a viernes
+    - cron: '55 13 * * 1-5'
+    - cron: '30 23 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  ejecutar-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar Script
+        env:
+          ASISTENCIA_USER: ${{ secrets.ASISTENCIA_USER }}
+          ASISTENCIA_PASSWORD: ${{ secrets.ASISTENCIA_PASSWORD }}
+        run: python asistencia.py
