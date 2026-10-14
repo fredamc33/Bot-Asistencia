@@ -42,7 +42,7 @@ def registrar_asistencia():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080") # Asegurar tamaño de pantalla estándar para evitar elementos ocultos
+    options.add_argument("--window-size=1920,1080")
     
     driver = webdriver.Chrome(options=options)
     
@@ -65,14 +65,14 @@ def registrar_asistencia():
         btn_login = driver.find_element(By.XPATH, "//button[contains(text(), 'Ingresar')]")
         btn_login.click()
         
-        # Depuración: Ver en qué URL estamos tras el login
-        time.sleep(3)
+        # Pausa para asegurar que la página interna cargue por completo en la nube
+        time.sleep(5)
         print(f"URL actual tras login: {driver.current_url}")
         
         print(f"4. Buscando el botón '{texto_boton}'...")
-        # Aumentamos el tiempo de espera a 30 segundos para evitar timeouts por lentitud del servidor
+        # normalize-space() evita errores por espacios invisibles en el texto del botón
         btn_turno = WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{texto_boton}')]"))
+            EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
         )
         btn_turno.click()
         
@@ -81,7 +81,6 @@ def registrar_asistencia():
 
     except Exception as e:
         print(f"Ocurrió un error durante la ejecución: {e}")
-        # Imprimir la URL y el título si falla para diagnosticar
         print(f"URL al fallar: {driver.current_url}")
         raise e
         
