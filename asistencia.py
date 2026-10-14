@@ -73,12 +73,21 @@ def registrar_asistencia():
             EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
         )
         
-        # FORZAR EL CLIC CON JAVASCRIPT (Soluciona el problema de que la web no registre la acción)
+        # Forzar clic en el botón principal
         driver.execute_script("arguments[0].click();", btn_turno)
+        print("Clic realizado en el botón principal. Buscando la ventana emergente...")
         
-        # Pausa más larga para dar tiempo a que el servidor procese el guardado de asistencia
-        time.sleep(8)
-        print(f"¡Acción '{texto_boton}' ejecutada por JavaScript con éxito!")
+        # 5. Si es el turno de la tarde, esperar y presionar el botón CONTINUAR de la advertencia
+        if texto_boton == "FINALIZAR TURNO":
+            btn_continuar = WebDriverWait(driver, 8).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='CONTINUAR']"))
+            )
+            driver.execute_script("arguments[0].click();", btn_continuar)
+            print("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
+
+        # Pausa final para asegurar que el servidor procese el guardado completo
+        time.sleep(6)
+        print(f"¡Proceso de '{texto_boton}' completado con éxito!")
 
     except Exception as e:
         print(f"Ocurrió un error durante la ejecución: {e}")
