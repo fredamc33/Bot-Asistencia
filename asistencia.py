@@ -3,7 +3,7 @@ import time
 import random
 import sys
 from datetime import datetime
-from zoneinfo import ZoneInfo  # Manejo oficial de zonas horarias en Python
+from zoneinfo import ZoneInfo
 
 def log(mensaje):
     print(mensaje)
@@ -23,7 +23,6 @@ def es_feriado(fecha):
     return False
 
 def registrar_asistencia():
-    # Obtener la hora actual exacta de Perú (America/Lima)
     zona_peru = ZoneInfo("America/Lima")
     hoy = datetime.now(zona_peru)
     
@@ -35,7 +34,6 @@ def registrar_asistencia():
 
     hora_actual = hoy.hour
     
-    # Si la hora en Perú es menor a las 14:00 (2:00 p.m.), es turno mañana
     if hora_actual < 14:
         retraso_aleatorio = random.randint(0, 600)
         log(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
@@ -86,18 +84,22 @@ def registrar_asistencia():
             EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
         )
         
-        # Forzar clic en el botón principal
         driver.execute_script("arguments[0].click();", btn_turno)
         log("Clic realizado en el botón principal.")
         
-        # 5. Si es turno tarde, presionar el botón CONTINUAR de la ventana emergente
+        # 5. Si es turno tarde, esperar brevemente a que aparezca el modal y presionar CONTINUAR
         if texto_boton == "FINALIZAR TURNO":
-            log("Buscando la ventana emergente de confirmación...")
-            btn_continuar = WebDriverWait(driver, 8).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='CONTINUAR']"))
-            )
-            driver.execute_script("arguments[0].click();", btn_continuar)
-            log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
+            log("Esperando la ventana emergente de confirmación...")
+            time.sleep(2)  # Pausa corta para que el modal termine de renderizarse
+            
+            try:
+                btn_continuar = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
+                )
+                driver.execute_script("arguments[0].click();", btn_continuar)
+                log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
+            except Exception as modal_error:
+                log(f"Aviso: No se pudo hacer clic en el modal automáticamente ({modal_error}). Verificando estado...")
 
         time.sleep(6)
         log(f"¡Proceso de '{texto_boton}' completado con éxito!")
