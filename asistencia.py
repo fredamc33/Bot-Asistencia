@@ -3,10 +3,11 @@ import time
 import random
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo  # Manejo oficial de zonas horarias en Python
 
 def log(mensaje):
     print(mensaje)
-    sys.stdout.flush()  # Muestra el mensaje inmediatamente en los registros de GitHub
+    sys.stdout.flush()
 
 def es_feriado(fecha):
     feriados_2026 = [
@@ -22,13 +23,19 @@ def es_feriado(fecha):
     return False
 
 def registrar_asistencia():
-    hoy = datetime.now()
+    # Obtener la hora actual exacta de Perú (America/Lima)
+    zona_peru = ZoneInfo("America/Lima")
+    hoy = datetime.now(zona_peru)
     
+    log(f"Hora actual detectada en Perú: {hoy.strftime('%Y-%m-%d %H:%M:%S')}")
+
     if es_feriado(hoy):
         log("Hoy es fin de semana o feriado oficial. No se registrará asistencia.")
         return
 
     hora_actual = hoy.hour
+    
+    # Si la hora en Perú es menor a las 14:00 (2:00 p.m.), es turno mañana
     if hora_actual < 14:
         retraso_aleatorio = random.randint(0, 600)
         log(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
@@ -50,8 +57,6 @@ def registrar_asistencia():
     options.add_argument("--window-size=1920,1080")
     
     driver = webdriver.Chrome(options=options)
-    
-    # Evitar que se quede colgado indefinidamente si la web tarda en cargar
     driver.set_page_load_timeout(30)
     
     try:
@@ -83,17 +88,17 @@ def registrar_asistencia():
         
         # Forzar clic en el botón principal
         driver.execute_script("arguments[0].click();", btn_turno)
-        log("Clic realizado en el botón principal. Buscando la ventana emergente...")
+        log("Clic realizado en el botón principal.")
         
-        # 5. Si es el turno de la tarde, esperar y presionar el botón CONTINUAR de la advertencia
+        # 5. Si es turno tarde, presionar el botón CONTINUAR de la ventana emergente
         if texto_boton == "FINALIZAR TURNO":
+            log("Buscando la ventana emergente de confirmación...")
             btn_continuar = WebDriverWait(driver, 8).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='CONTINUAR']"))
             )
             driver.execute_script("arguments[0].click();", btn_continuar)
             log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
 
-        # Pausa final para asegurar que el servidor procese el guardado completo
         time.sleep(6)
         log(f"¡Proceso de '{texto_boton}' completado con éxito!")
 
