@@ -1,11 +1,7 @@
 name: Automatizar Asistencia
 
 on:
-  schedule:
-    # 8:55 AM (13:55 UTC) y 6:30 PM (23:30 UTC) de lunes a viernes
-    - cron: '55 13 * * 1-5'
-    - cron: '30 23 * * 1-5'
-  workflow_dispatch:
+  workflow_dispatch:  # Permite activarlo mediante la API de GitHub
 
 jobs:
   ejecutar-bot:
