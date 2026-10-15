@@ -33,17 +33,14 @@ def registrar_asistencia():
         return
 
     hora_actual = hoy.hour
-    minuto_actual = hoy.minute
-
+    
     if hora_actual < 14:
-        # Turno Mañana (08:55 a.m. + hasta 10 min de retraso = 08:55 a 09:05)
-        retraso_aleatorio = random.randint(0, 600)
+        retraso_aleatorio = random.randint(0, 600) # Entre 0 y 10 minutos (08:55 a 09:05)
         log(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
         time.sleep(retraso_aleatorio)
         texto_boton = "INICIAR TURNO"
     else:
-        # Turno Tarde (06:30 p.m. + hasta 5 min de retraso = 06:30 a 06:35)
-        retraso_aleatorio = random.randint(0, 300)
+        retraso_aleatorio = random.randint(0, 300) # Entre 0 y 5 minutos (18:30 a 18:35)
         log(f"Turno Tarde: Esperando {retraso_aleatorio} segundos para el registro de salida...")
         time.sleep(retraso_aleatorio)
         texto_boton = "FINALIZAR TURNO"
@@ -92,19 +89,18 @@ def registrar_asistencia():
         driver.execute_script("arguments[0].click();", btn_turno)
         log("Clic realizado en el botón principal.")
         
-        # 5. Si es turno tarde, esperar brevemente a que aparezca el modal y presionar CONTINUAR
-        if texto_boton == "FINALIZAR TURNO":
-            log("Esperando la ventana emergente de confirmación...")
-            time.sleep(2)  # Pausa corta para que el modal termine de renderizarse
-            
-            try:
-                btn_continuar = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
-                )
-                driver.execute_script("arguments[0].click();", btn_continuar)
-                log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
-            except Exception as modal_error:
-                log(f"Aviso: No se pudo hacer clic en el modal automáticamente ({modal_error}). Verificando estado...")
+        # 5. Esperar la ventana emergente de confirmación y presionar CONTINUAR (Aplica para ambos turnos)
+        log("Esperando la ventana emergente de confirmación...")
+        time.sleep(2)  # Pausa corta para que el modal termine de renderizarse
+        
+        try:
+            btn_continuar = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
+            )
+            driver.execute_script("arguments[0].click();", btn_continuar)
+            log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
+        except Exception as modal_error:
+            log(f"Aviso: No se pudo hacer clic en el modal automáticamente ({modal_error}). Verificando estado...")
 
         time.sleep(6)
         log(f"¡Proceso de '{texto_boton}' completado con éxito!")
