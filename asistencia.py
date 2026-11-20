@@ -33,17 +33,26 @@ def registrar_asistencia():
         return
 
     hora_actual = hoy.hour
+    minuto_actual = hoy.minute
     
     if hora_actual < 14:
-        retraso_aleatorio = random.randint(0, 600)
-        log(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
-        time.sleep(retraso_aleatorio)
         texto_boton = "INICIAR TURNO"
+        # Si ya pasaron las 09:05, ejecutar sin espera aleatoria
+        if hora_actual > 9 or (hora_actual == 9 and minuto_actual >= 5):
+            log("Turno Mañana (pasadas las 09:05): Ejecutando registro de inmediato sin espera...")
+        else:
+            retraso_aleatorio = random.randint(0, 600)
+            log(f"Turno Mañana: Esperando {retraso_aleatorio} segundos...")
+            time.sleep(retraso_aleatorio)
     else:
-        retraso_aleatorio = random.randint(0, 300)
-        log(f"Turno Tarde: Esperando {retraso_aleatorio} segundos para el registro de salida...")
-        time.sleep(retraso_aleatorio)
         texto_boton = "FINALIZAR TURNO"
+        # Si ya pasaron las 18:35, ejecutar sin espera aleatoria
+        if hora_actual > 18 or (hora_actual == 18 and minuto_actual >= 35):
+            log("Turno Tarde (pasadas las 18:35): Ejecutando registro de salida de inmediato sin espera...")
+        else:
+            retraso_aleatorio = random.randint(0, 300)
+            log(f"Turno Tarde: Esperando {retraso_aleatorio} segundos para el registro de salida...")
+            time.sleep(retraso_aleatorio)
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
