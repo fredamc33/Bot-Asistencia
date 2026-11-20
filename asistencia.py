@@ -84,7 +84,6 @@ def registrar_asistencia():
             driver.get("https://registrar.asistencia.work/sistema/acceso/panel")
             
             log("2. Ingresando credenciales...")
-            # Aumentamos a 30 segundos la espera inicial para evitar fallos por lentitud del servidor
             usuario_input = WebDriverWait(driver, 30).until(
                 EC.presence_of_element_located((By.ID, "usuario"))
             )
@@ -107,26 +106,47 @@ def registrar_asistencia():
                 EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
             )
             
-            driver.execute_script("arguments[0].click();", btn_turno)
+            # Clic nativo con respaldo JS en el botón principal
+            try:
+                btn_turno.click()
+            except:
+                driver.execute_script("arguments[0].click();", btn_turno)
             log("Clic realizado en el botón principal.")
             
             log("Esperando la ventana emergente de confirmación...")
             time.sleep(2)
             
+            btn_continuar = WebDriverWait(driver, 15).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
+            )
+            
+            # Intentar clic nativo primero y respaldo con execute_script
             try:
-                btn_continuar = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
-                )
+                btn_continuar.click()
+            except:
                 driver.execute_script("arguments[0].click();", btn_continuar)
-                log("¡Botón 'CONTINUAR' presionado con éxito en la ventana emergente!")
-            except Exception as modal_error:
-                log(f"Aviso: No se pudo hacer clic en el modal automáticamente ({modal_error}). Verificando estado...")
-
-            time.sleep(6)
-            log(f"¡Proceso de '{texto_boton}' completado con éxito!")
+                
+            log("Botón 'CONTINUAR' presionado. Verificando que el registro se haya guardado...")
+            
+            # Esperar a que el modal desaparezca por completo
+            WebDriverWait(driver, 15).until(
+                EC.invisibility_of_element_located((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
+            )
+            
+            # Pausa para que el servidor procese el guardado y recarga para confirmar en BD
+            time.sleep(5)
+            driver.refresh()
+            time.sleep(4)
+            
+            # Verificación estricta: si el botón original sigue existiendo en pantalla, el registro NO se guardó
+            botones_restantes = driver.find_elements(By.XPATH, f"//a[normalize-space()='{texto_boton}']")
+            if len(botones_restantes) > 0 and botones_restantes[0].is_displayed():
+                raise Exception(f"Falso positivo detectado: el botón '{texto_boton}' sigue visible tras confirmar.")
+                
+            log(f"¡Verificado en plataforma! Proceso de '{texto_boton}' guardado correctamente.")
             
             driver.quit()
-            break  # Si llega hasta aquí sin errores, rompe el bucle y finaliza exitosamente
+            break
             
         except Exception as e:
             log(f"Ocurrió un error en el intento {intento}: {e}")
@@ -135,14 +155,14 @@ def registrar_asistencia():
             except:
                 pass
                 
-            driver.quit() # Cierra el navegador de este intento fallido
+            driver.quit()
             
             if intento < max_intentos:
                 log("Esperando 60 segundos antes de reintentar...")
                 time.sleep(60)
             else:
                 log("Se agotaron todos los intentos. El proceso finalizó con error.")
-                raise e # Lanza el error final para que GitHub Actions marque la tarea como fallida
+                raise e
 
 if __name__ == "__main__":
     registrar_asistencia()
