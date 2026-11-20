@@ -106,25 +106,17 @@ def registrar_asistencia():
                 EC.element_to_be_clickable((By.XPATH, f"//a[normalize-space()='{texto_boton}']"))
             )
             
-            # Clic nativo con respaldo JS en el botón principal
-            try:
-                btn_turno.click()
-            except:
-                driver.execute_script("arguments[0].click();", btn_turno)
-            log("Clic realizado en el botón principal.")
+            # Pausa breve para asegurar que los eventos JS del modal estén cargados
+            time.sleep(2)
+            driver.execute_script("arguments[0].click();", btn_turno)
+            log("Clic JS realizado en el botón principal.")
             
             log("Esperando la ventana emergente de confirmación...")
-            time.sleep(2)
-            
             btn_continuar = WebDriverWait(driver, 15).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
+                EC.visibility_of_element_located((By.XPATH, "//button[contains(translate(normalize-space(), 'continuar', 'CONTINUAR'), 'CONTINUAR')]"))
             )
-            
-            # Intentar clic nativo primero y respaldo con execute_script
-            try:
-                btn_continuar.click()
-            except:
-                driver.execute_script("arguments[0].click();", btn_continuar)
+            time.sleep(1)
+            driver.execute_script("arguments[0].click();", btn_continuar)
                 
             log("Botón 'CONTINUAR' presionado. Verificando que el registro se haya guardado...")
             
